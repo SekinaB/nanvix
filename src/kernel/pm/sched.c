@@ -26,7 +26,7 @@
 
 /**
  * @brief Schedules a process to execution.
- * 
+ *
  * @param proc Process to be scheduled.
  */
 PUBLIC void sched(struct process *proc)
@@ -47,21 +47,33 @@ PUBLIC void stop(void)
 
 /**
  * @brief Resumes a process.
- * 
+ *
  * @param proc Process to be resumed.
- * 
+ *
  * @note The process must stopped to be resumed.
  */
 PUBLIC void resume(struct process *proc)
-{	
+{
 	/* Resume only if process has stopped. */
 	if (proc->state == PROC_STOPPED)
 		sched(proc);
 }
 
+PRIVATE int is_prior_to(struct process *p, struct process *next)
+{
+	if (p->priority > next->priority)
+		return 1;
+	if (p->priority == next->priority && p->counter > next->counter)
+		return 1;
+	if (p->priority == next->priority && p->counter == next->counter && p->nice > next->nice)
+		return 1;
+	else
+		return 0;
+}
+
 /**
- * @brief Yields the processor.
- */
+* @brief Yields the processor.
+*/
 PUBLIC void yield(void)
 {
 	struct process *p;    /* Working process.     */
@@ -80,7 +92,7 @@ PUBLIC void yield(void)
 		/* Skip invalid processes. */
 		if (!IS_VALID(p))
 			continue;
-		
+
 		/* Alarm has expired. */
 		if ((p->alarm) && (p->alarm < ticks))
 			p->alarm = 0, sndsig(p, SIGALRM);
@@ -93,25 +105,29 @@ PUBLIC void yield(void)
 		/* Skip non-ready process. */
 		if (p->state != PROC_READY)
 			continue;
-		
+
 		/*
 		 * Process with higher
 		 * waiting time found.
 		 */
-		if (p->counter > next->counter)
+		if (is_prior_to(p, next))
 		{
+			next->priority++;
 			next->counter++;
 			next = p;
 		}
-			
+
 		/*
 		 * Increment waiting
 		 * time of process.
 		 */
 		else
+		{
+			p->priority++;
 			p->counter++;
+		}
 	}
-	
+
 	/* Switch to next process. */
 	next->priority = PRIO_USER;
 	next->state = PROC_RUNNING;
