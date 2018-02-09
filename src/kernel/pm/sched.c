@@ -108,7 +108,7 @@ PUBLIC void yield(void)
 
 		/*
 		 * Process with higher
-		 * waiting time found.
+		 * priority found.
 		 */
 		if (is_prior_to(p, next))
 		{
