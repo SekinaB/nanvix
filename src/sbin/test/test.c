@@ -345,10 +345,12 @@ static int sched_test3(void)
 	struct tms timing; /* Timing information. */
 	clock_t start, end;
 
+	printf("Enter in sched test 3\n");
+
 	for (int i = 0; i < 4; i++)
 	{
 		pid[i] = fork();
-
+printf("After fork %d\n", pid[i]);
 		/* Failed to fork(). */
 		if (pid[i] < 0)
 			return (-1);
@@ -357,7 +359,7 @@ static int sched_test3(void)
 		else if (pid[i] == 0)
 		{
 			start = times(&timing);
-			printf("Thread %d : start %d", i, start);
+			printf("Thread %d : start %d\n", i, start);
 			if (i & 1)
 			{
 				nice((2*i) * NZERO);
@@ -372,7 +374,19 @@ static int sched_test3(void)
 				_exit(EXIT_SUCCESS);
 			}
 			end = times(&timing);
-			printf("Thread %d : end %d (total execution time : %d)", i, end, end - start);
+			printf("Thread %d : end %d (total execution time : %d)\n", i, end, end - start);
+		}
+	}
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (i & 1)
+			wait(NULL);
+
+		else
+		{
+			kill(pid[i], SIGCONT);
+			wait(NULL);
 		}
 	}
 	return (0);
@@ -651,14 +665,14 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "sched"))
 		{
 			printf("Scheduling Tests\n");
+			printf("  scheduler timer    [%s]\n",
+						 (!sched_test3()) ? "PASSED" : "FAILED");
 			printf("  waiting for child  [%s]\n",
 				(!sched_test0()) ? "PASSED" : "FAILED");
 			printf("  dynamic priorities [%s]\n",
 				(!sched_test1()) ? "PASSED" : "FAILED");
 			printf("  scheduler stress   [%s]\n",
 				(!sched_test2()) ? "PASSED" : "FAILED");
-			printf("  scheduler timer    [%s]\n",
-				(!sched_test3()) ? "PASSED" : "FAILED");
 		}
 
 		/* IPC test. */
