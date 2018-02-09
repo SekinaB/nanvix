@@ -339,18 +339,23 @@ static int sched_test2(void)
 	return (0);
 }
 
+/**
+ * @brief Scheduling test 3.
+ *
+ * @details Spawns several processes and print the threads' nice priority
+ * 					(unsigned) and the execution time.
+ *
+ * @returns Zero if no errors, and non-zero otherwise.
+ */
 static int sched_test3(void)
 {
 	pid_t pid[4];
 	struct tms timing; /* Timing information. */
 	clock_t start, end;
 
-	printf("Enter in sched test 3\n");
-
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		pid[i] = fork();
-printf("After fork %d\n", pid[i]);
 		/* Failed to fork(). */
 		if (pid[i] < 0)
 			return (-1);
@@ -359,26 +364,31 @@ printf("After fork %d\n", pid[i]);
 		else if (pid[i] == 0)
 		{
 			start = times(&timing);
-			printf("Thread %d : start %d\n", i, start);
 			if (i & 1)
 			{
-				nice((2*i) * NZERO);
+				int n = 2 * NZERO;
+				nice(n);
 				work_cpu();
+				end = times(&timing);
+				printf("Total execution time (Thread %d, nice %d ) : %d\n", i, n, end - start);
+				fflush(stdout);
 				_exit(EXIT_SUCCESS);
 			}
 
 			else
 			{
-				nice((-2 * i) * NZERO);
+				int n = (-2) * NZERO;
+				nice(n);
 				pause();
+				end = times(&timing);
+				printf("Total execution time (Thread %d, nice %d ) : %d\n", i, n, end - start);
+				fflush(stdout);
 				_exit(EXIT_SUCCESS);
 			}
-			end = times(&timing);
-			printf("Thread %d : end %d (total execution time : %d)\n", i, end, end - start);
 		}
 	}
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		if (i & 1)
 			wait(NULL);
@@ -391,7 +401,6 @@ printf("After fork %d\n", pid[i]);
 	}
 	return (0);
 }
-
 
 /*============================================================================*
  *                             Semaphores Test                                *
@@ -665,14 +674,14 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "sched"))
 		{
 			printf("Scheduling Tests\n");
-			printf("  scheduler timer    [%s]\n",
-						 (!sched_test3()) ? "PASSED" : "FAILED");
 			printf("  waiting for child  [%s]\n",
 				(!sched_test0()) ? "PASSED" : "FAILED");
 			printf("  dynamic priorities [%s]\n",
 				(!sched_test1()) ? "PASSED" : "FAILED");
 			printf("  scheduler stress   [%s]\n",
 				(!sched_test2()) ? "PASSED" : "FAILED");
+			printf("  scheduler timer    [%s]\n",
+				(!sched_test3()) ? "PASSED" : "FAILED");
 		}
 
 		/* IPC test. */
