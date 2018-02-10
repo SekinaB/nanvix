@@ -31,6 +31,13 @@
 #include <signal.h>
 #include <limits.h>
 
+PUBLIC int current_nbtickets;
+/**
+ * @brief Creation of an array containing the processes
+ * 				occurence according to their priorities.
+ */
+PUBLIC struct process *ticket_array[PROC_MAX * 8];
+
 /**
  * @brief Idle process page directory.
  */
@@ -47,12 +54,12 @@ PUBLIC char idle_kstack[KSTACK_SIZE];
 PUBLIC struct process proctab[PROC_MAX];
 
 /**
- * @brief Current running process. 
+ * @brief Current running process.
  */
 PUBLIC struct process *curr_proc = IDLE;
 
 /**
- * @brief Last running process. 
+ * @brief Last running process.
  */
 PUBLIC struct process *last_proc = IDLE;
 
@@ -70,14 +77,14 @@ PUBLIC unsigned nprocs = 0;
  * @brief Initializes the process management system.
  */
 PUBLIC void pm_init(void)
-{	
+{
 	int i;             /* Loop index.      */
 	struct process *p; /* Working process. */
-	
+
 	/* Initialize the process table. */
 	for (p = FIRST_PROC; p <= LAST_PROC; p++)
 		p->flags = 0, p->state = PROC_DEAD;
-		
+
 	/* Handcraft init process. */
 	IDLE->cr3 = (dword_t)idle_pgdir;
 	IDLE->intlvl = 1;
@@ -120,8 +127,76 @@ PUBLIC void pm_init(void)
 	IDLE->alarm = 0;
 	IDLE->next = NULL;
 	IDLE->chain = NULL;
-	
+
 	nprocs++;
 
+	/*Initialisation of the number of tickets*/
+	current_nbtickets = 0;
+
 	enable_interrupts();
+}
+
+PUBLIC int prio_to_tickets(int priority)
+{
+	/* Return the number of tickets according to the priority */
+	switch (priority)
+	{
+	case PRIO_IO:
+		return 1;
+	case PRIO_BUFFER:
+		return 2;
+	case PRIO_INODE:
+		return 3;
+	case PRIO_SUPERBLOCK:
+		return 4;
+	case PRIO_REGION:
+		return 5;
+	case PRIO_TTY:
+		return 6;
+	case PRIO_SIG:
+		return 7;
+	case PRIO_USER:
+		return 8;
+	default:
+		return (-1);
+	}
+}
+
+PUBLIC void add_tickets(struct process *p)
+{
+	int nb_tickets = prio_to_tickets(p->priority);
+	int i = 0;
+	/* Give the process nb_tickets slots in the array */
+	while (i < nb_tickets && current_nbtickets < PROC_MAX * 8)
+	{
+		ticket_array[current_nbtickets] = p;
+		current_nbtickets++;
+		i++;
+	}
+}
+
+PUBLIC void remove_tickets(struct process *p)
+{
+	int nb_tickets = prio_to_tickets(p->priority);
+
+	/* Look for the first occurence of the process*/
+	int i = 0;
+	while (ticket_array[i] != p)
+	{
+		i++;
+	}
+
+	/* Remove all the ocurrences */
+	int j = 0;
+	while (j < nb_tickets)
+	{
+		ticket_array[i + j] = NULL;
+		j++;
+	}
+
+	/*Remove the blank space in the array, if necessary*/
+	while (i + j < current_nbtickets){
+		ticket_array[i] = ticket_array[i + j];
+		i++;
+	}
 }

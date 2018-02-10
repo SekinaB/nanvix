@@ -24,6 +24,7 @@
 #include <nanvix/pm.h>
 #include <signal.h>
 
+
 /**
  * @brief Schedules a process to execution.
  *
@@ -59,16 +60,15 @@ PUBLIC void resume(struct process *proc)
 		sched(proc);
 }
 
-PRIVATE int is_prior_to(struct process *p, struct process *next)
+/**
+ * @brief Random number generator
+ */
+unsigned long int seed = 1;
+
+int rand(void)
 {
-	if (p->priority > next->priority)
-		return 1;
-	if (p->priority == next->priority && p->counter > next->counter)
-		return 1;
-	if (p->priority == next->priority && p->counter == next->counter && p->nice > next->nice)
-		return 1;
-	else
-		return 0;
+	seed = seed * 1103515245 + 12345;
+	return ((seed >> 16) & 0x7fff);
 }
 
 /**
@@ -98,34 +98,21 @@ PUBLIC void yield(void)
 			p->alarm = 0, sndsig(p, SIGALRM);
 	}
 
-	/* Choose a process to run next. */
+	/** Choose a process to run next.
+	 * Process selectedby a random
+	 */
 	next = IDLE;
+	do{
+		next = ticket_array[rand() % current_nbtickets];
+	} while (next->state != PROC_READY) ;
+
 	for (p = FIRST_PROC; p <= LAST_PROC; p++)
 	{
-		/* Skip non-ready process. */
-		if (p->state != PROC_READY)
+		/* Skip invalid processes. */
+		if (p->state != PROC_READY || p == next)
 			continue;
 
-		/*
-		 * Process with higher
-		 * priority found.
-		 */
-		if (is_prior_to(p, next))
-		{
-			next->priority++;
-			next->counter++;
-			next = p;
-		}
-
-		/*
-		 * Increment waiting
-		 * time of process.
-		 */
-		else
-		{
-			p->priority++;
-			p->counter++;
-		}
+		p->counter++;
 	}
 
 	/* Switch to next process. */
