@@ -379,7 +379,7 @@ static int sched_test3(void)
 			{
 				int n = (-2) * NZERO;
 				nice(n);
-				pause();
+				work_cpu();
 				end = times(&timing);
 				printf("Total execution time (Thread %d, nice %d ) : %d\n", i, n, end - start);
 				fflush(stdout);
@@ -674,14 +674,14 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "sched"))
 		{
 			printf("Scheduling Tests\n");
+			printf("  scheduler timer    [%s]\n",
+				(!sched_test3()) ? "PASSED" : "FAILED");
 			printf("  waiting for child  [%s]\n",
 				(!sched_test0()) ? "PASSED" : "FAILED");
 			printf("  dynamic priorities [%s]\n",
 				(!sched_test1()) ? "PASSED" : "FAILED");
 			printf("  scheduler stress   [%s]\n",
 				(!sched_test2()) ? "PASSED" : "FAILED");
-			printf("  scheduler timer    [%s]\n",
-				(!sched_test3()) ? "PASSED" : "FAILED");
 		}
 
 		/* IPC test. */

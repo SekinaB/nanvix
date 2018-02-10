@@ -61,11 +61,11 @@ PUBLIC void resume(struct process *proc)
 
 PRIVATE int is_prior_to(struct process *p, struct process *next)
 {
-	if (p->priority > next->priority)
+	if (p->priority < next->priority)
 		return 1;
 	if (p->priority == next->priority && p->counter > next->counter)
 		return 1;
-	if (p->priority == next->priority && p->counter == next->counter && p->nice > next->nice)
+	if (p->priority == next->priority && p->counter == next->counter && p->nice < next->nice)
 		return 1;
 	else
 		return 0;
@@ -112,7 +112,7 @@ PUBLIC void yield(void)
 		 */
 		if (is_prior_to(p, next))
 		{
-			next->priority++;
+			next->priority--;
 			next->counter++;
 			next = p;
 		}
@@ -123,7 +123,7 @@ PUBLIC void yield(void)
 		 */
 		else
 		{
-			p->priority++;
+			p->priority--;
 			p->counter++;
 		}
 	}
