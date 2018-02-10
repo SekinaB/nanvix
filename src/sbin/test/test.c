@@ -339,16 +339,23 @@ static int sched_test2(void)
 	return (0);
 }
 
+/**
+ * @brief Scheduling test 3.
+ *
+ * @details Spawns several processes and print the threads' nice priority
+ * 					(unsigned) and the execution time.
+ *
+ * @returns Zero if no errors, and non-zero otherwise.
+ */
 static int sched_test3(void)
 {
 	pid_t pid[4];
 	struct tms timing; /* Timing information. */
 	clock_t start, end;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		pid[i] = fork();
-
 		/* Failed to fork(). */
 		if (pid[i] < 0)
 			return (-1);
@@ -357,27 +364,43 @@ static int sched_test3(void)
 		else if (pid[i] == 0)
 		{
 			start = times(&timing);
-			printf("Thread %d : start %d", i, start);
 			if (i & 1)
 			{
-				nice((2*i) * NZERO);
+				int n = 2 * NZERO;
+				nice(n);
 				work_cpu();
+				end = times(&timing);
+				printf("Total execution time (Thread %d, nice %d ) : %d\n", i, n, end - start);
+				fflush(stdout);
 				_exit(EXIT_SUCCESS);
 			}
 
 			else
 			{
-				nice((-2 * i) * NZERO);
+				int n = (-2) * NZERO;
+				nice(n);
 				pause();
+				end = times(&timing);
+				printf("Total execution time (Thread %d, nice %d ) : %d\n", i, n, end - start);
+				fflush(stdout);
 				_exit(EXIT_SUCCESS);
 			}
-			end = times(&timing);
-			printf("Thread %d : end %d (total execution time : %d)", i, end, end - start);
+		}
+	}
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (i & 1)
+			wait(NULL);
+
+		else
+		{
+			kill(pid[i], SIGCONT);
+			wait(NULL);
 		}
 	}
 	return (0);
 }
-
 
 /*============================================================================*
  *                             Semaphores Test                                *
