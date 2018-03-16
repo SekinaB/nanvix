@@ -292,46 +292,59 @@ PRIVATE struct
  */
 PRIVATE int allocf(void)
 {
-	int i;      /* Loop index.  */
-	int oldest; /* Oldest page. */
-	
-	#define OLDEST(x, y) (frames[x].age < frames[y].age)
-	
-	/* Search for a free frame. */
-	oldest = -1;
-	for (i = 0; i < NR_FRAMES; i++)
-	{
-		/* Found it. */
-		if (frames[i].count == 0)
-			goto found;
-		
-		/* Local page replacement policy. */
-		if (frames[i].owner == curr_proc->pid)
-		{
-			/* Skip shared pages. */
-			if (frames[i].count > 1)
-				continue;
-			
-			/* Oldest page found. */
-			if ((oldest < 0) || (OLDEST(i, oldest)))
-				oldest = i;
-		}
-	}
-	
-	/* No frame left. */
-	if (oldest < 0)
-		return (-1);
-	
-	/* Swap page out. */
-	if (swap_out(curr_proc, frames[i = oldest].addr))
-		return (-1);
-	
-found:		
+  int i;      /* Loop index.  */
+  int oldest; /* Oldest page. */
 
-	frames[i].age = ticks;
-	frames[i].count = 1;
-	
-	return (i);
+  #define OLDEST(x, y) (frames[x].age < frames[y].age)
+
+  /* Search for a free frame. */
+  oldest = -1;
+  for (i = 0; i < NR_FRAMES; i = (i + 1) )  {
+
+    /* Found it. */
+    if (frames[i].count == 0) {
+      goto found;
+    }
+
+    /* Local page replacement policy. */
+    if (frames[i].owner == curr_proc->pid) {
+      /* Skip shared pages. */
+      if (frames[i].count > 1){
+        continue;
+      }
+
+      // Regarde default de page. La matrice doit etre suffiante pour la mem. Def au debut il faut changer. 1024. Peut changer l'odre des for.
+      // Agin et second chance.
+
+      struct pte *pg = getpte(curr_proc, frames[i].addr);
+      /* Oldest page found. */
+      if (pg->accessed == 1){
+        //kprintf("Continue %d", i);
+        pg->accessed = 0;
+      } else {
+        if ((oldest < 0) || (OLDEST(i, oldest)))
+          oldest = i;
+      }
+    }
+    if (oldest == -1 && i == NR_FRAMES-1){
+      i = 0;
+    }
+  }
+
+  /* No frame left. */
+  if (oldest < 0)
+    return (-1);
+
+  /* Swap page out. */
+  if (swap_out(curr_proc, frames[i = oldest].addr))
+    return (-1);
+
+found:
+
+  frames[i].age = ticks;
+  frames[i].count = 1;
+
+  return (i);
 }
 
 /**
