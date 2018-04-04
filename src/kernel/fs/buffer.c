@@ -322,7 +322,7 @@ PUBLIC struct buffer *bread(dev_t dev, block_t num)
 	return (buf);
 }
 
-PUBLIC struct buffer *breada(dev_t dev, block_t num)
+PUBLIC struct buffer *bread_async(dev_t dev, block_t num)
 {
 	struct buffer *buf;
 
@@ -332,7 +332,7 @@ PUBLIC struct buffer *breada(dev_t dev, block_t num)
 	if (buf->flags & BUFFER_VALID)
 		return (buf);
 
-	bdev_readblka(buf);
+	bdev_readblk_async(buf);
 
 	/* Update buffer flags. */
 	buf->flags |= BUFFER_VALID;

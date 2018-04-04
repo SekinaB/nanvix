@@ -667,7 +667,7 @@ PRIVATE int ata_readblk(unsigned minor, buffer_t buf)
  * Reads a block from a ATA device. (asyncronous) *
  ******************** ADDED ***********************
  **************************************************/
-PRIVATE int ata_readblka(unsigned minor, buffer_t buf)
+PRIVATE int ata_readblk_async(unsigned minor, buffer_t buf)
 {
 	struct atadev *dev;
 
@@ -868,7 +868,7 @@ PRIVATE const struct bdev ata_ops = {
 	&ata_read,				/* read()      */
 	&ata_write,				/* write()     */
 	&ata_readblk,			/* readblk()   */
-	&ata_readblka, 		/* readblka()) */
+	&ata_readblk_async, 		/* readblk_async()) */
 	&ata_writeblk			/* writeblk()  */
 };
 

@@ -34,6 +34,7 @@
 #define FULL     (1 << 1)
 #define VERBOSE  (1 << 2)
 
+#define BLOCK_SIZE 128
 /* Test flags. */
 static unsigned flags = VERBOSE | FULL;
 
@@ -146,16 +147,22 @@ static int io_test(void)
 		exit(EXIT_FAILURE);
 
 	/* Open hdd. */
-	fd = open("/dev/hdd", O_RDONLY);
-	if (fd < 0)
-		exit(EXIT_FAILURE);
+	//fd = open("/dev/hdd", O_RDONLY);
+	fd = open("/sbin/test.txt", O_RDONLY);
+printf("Life could be a better place\n");
+	if (fd < 0){
+printf("Life could be a better place\n");
+		exit(EXIT_FAILURE);}
+printf("Life could be a better place\n");
 
 	t0 = times(&timing);
 
+printf("Life could be a better place\n");
 	/* Read hdd. */
-	if (read(fd, buffer, MEMORY_SIZE) != MEMORY_SIZE)
+	if (read(fd, buffer, BLOCK_SIZE) != BLOCK_SIZE)
 		exit(EXIT_FAILURE);
 
+printf("Life could be a better place\n");
 	t1 = times(&timing);
 
 	/* House keeping. */
@@ -177,7 +184,7 @@ static int io_test(void)
  *
  * @returns Zero if passed on test, and non-zero otherwise.
  */
-static int io_testa(void)
+static int io_test_async(void)
 {
 	int fd;            /* File descriptor.    */
 	struct tms timing; /* Timing information. */
@@ -190,14 +197,14 @@ static int io_testa(void)
 		exit(EXIT_FAILURE);
 
 	/* Open file. */
-	fd = open("/sbin/testa", O_RDONLY);
+	fd = open("/sbin/testa.txt", O_RDONLY);
 	if (fd < 0)
 		exit(EXIT_FAILURE);
 
 	t0 = times(&timing);
 
 	/* Read hdd. */
-	if (reada(fd, buffer, MEMORY_SIZE) != MEMORY_SIZE)
+	if (read(fd, buffer, MEMORY_SIZE) != MEMORY_SIZE)
 		exit(EXIT_FAILURE);
 
 	t1 = times(&timing);
@@ -642,7 +649,7 @@ int main(int argc, char **argv)
 			printf("  Result:             [%s]\n",
 				(!io_test()) ? "PASSED" : "FAILED");
 			printf("  Result:             [%s]\n",
-				(!io_testa()) ? "PASSED" : "FAILED");
+				(!io_test_async()) ? "PASSED" : "FAILED");
 		}
 
 		/* Swapping test. */

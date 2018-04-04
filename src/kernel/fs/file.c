@@ -331,13 +331,15 @@ out:
 	return ((ssize_t)(p - (char *)buf));
 }
 
-PUBLIC ssize_t file_reada(struct inode *i, void *buf, size_t n, off_t off)
+PUBLIC ssize_t file_read_async(struct inode *i, void *buf, size_t n, off_t off)
 {
 	char *p;						 /* Writing pointer.      */
 	size_t blkoff;			 /* Block offset.         */
 	size_t chunk;				 /* Data chunk size.      */
-	block_t blk, blk_s;				 /* Working block number. */
+	block_t blk;				 /* Working block number. */
 	struct buffer *bbuf; /* Working block buffer. */
+//	block_t blk, blk_s;				 /* Working block number. */
+//	struct buffer *bbuf, *bbuf_s; /* Working block buffer. */
 
 	p = buf;
 
@@ -347,7 +349,7 @@ PUBLIC ssize_t file_reada(struct inode *i, void *buf, size_t n, off_t off)
 	do
 	{
 		blk = block_map(i, off, 0);
-		blk_s = block_map(i, off + BLOCK_SIZE, 0);
+		//blk_s = block_map(i, off + BLOCK_SIZE, 0);
 
 		/* End of file reached. */
 		if (blk == BLOCK_NULL)
@@ -372,15 +374,16 @@ PUBLIC ssize_t file_reada(struct inode *i, void *buf, size_t n, off_t off)
 		kmemcpy(p, (char *)bbuf->data + blkoff, chunk);
 		brelse(bbuf);
 
-		blk_s = block_map(i, off + BLOCK_SIZE, 0);
+	//	blk_s = block_map(i, off + BLOCK_SIZE, 0);
 
-		if (blk_s != BLOCK_NULL)
+		/*if (blk_s != BLOCK_NULL)
 		{
-			bbuf_s = breada(i->dev, blk_s);
-			blkoff = off % BLOCK_SIZE;
 
+			bbuf_s = bread_async(i->dev, blk_s);
+			blkoff = off % BLOCK_SIZE;
+*/
 			/* Calculate read chunk size. */
-			chunk = (n < BLOCK_SIZE - blkoff) ? n : BLOCK_SIZE - blkoff;
+		/*chunk = (n < BLOCK_SIZE - blkoff) ? n : BLOCK_SIZE - blkoff;
 			if ((off_t)chunk > i->size - off)
 			{
 				chunk = i->size - off;
@@ -393,7 +396,7 @@ PUBLIC ssize_t file_reada(struct inode *i, void *buf, size_t n, off_t off)
 
 			kmemcpy(p, (char *)bbuf_s->data + blkoff, chunk);
 			brelse(bbuf_s);
-		}
+		}*/
 
 		n -= chunk;
 		off += chunk;
